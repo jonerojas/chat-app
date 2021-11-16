@@ -2,12 +2,13 @@
 <html lang="en">
   <head>
     <title>Chat App</title>
+    <link rel="stylesheet" href="/css/styles.min.css" />
+    <link rel="icon" type="image/png" href="/img/favicon.png" />
   </head>
   <body>
     <h1>Chat App</h1>
 
     <div id="messages"></div>
-    <div id="coords"></div>
 
     <form id="message-form">
       <input name="userMessage" placeholder="Text here" type="text" value="" />
@@ -15,15 +16,17 @@
     </form>
     <button id="send-location">Share Location</button>
 
+    <!--We use the id to identufy and target this element/template from chat.js-->
     <script id="message-template" type="text/html">
       <div>
-        <p li>{{text}}</p>
+        <p li>{{createdAt}} - {{text}}</p>
       </div>
     </script>
 
     <script id="location-template" type="text/html">
       <div>
         <p>
+          {{createdAt}} -
           <a href="{{coordinates}}" target="_blank">Current Location</a>
         </p>
       </div>

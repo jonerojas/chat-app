@@ -3,6 +3,7 @@ const http = require('http');
 const path = require('path');
 const socketio = require('socket.io');
 const Filter = require('bad-words');
+const { generateMessage, generateLocationMessage } = require('./utils/messages');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,8 +16,6 @@ const publicDirectoryPath = path.join(__dirname, '../public');
 
 app.use(express.static(publicDirectoryPath));
 
-let message = 'Welcome!';
-
 //Listens for a given event to trigger
 //'connection' will fire when a connection is made
 //io.on is only used to listen for new connections
@@ -24,9 +23,9 @@ io.on('connection', (socket) => {
   console.log('New WebSocket connection');
 
   //emit is used to send the event to the client
-  socket.emit('message', message);
+  socket.emit('message', generateMessage('Welcome'));
   //broadcast is used to emit a message to all users EXCEPT the person sending the message
-  socket.broadcast.emit('message', 'A new user has joined!!!');
+  socket.broadcast.emit('message', generateMessage('A new user has joined!'));
 
   //io.emit sends to all users vs sokcet.io which is only visible to user that sent message
   //This sends the updated count back to ALL clients
@@ -38,7 +37,7 @@ io.on('connection', (socket) => {
     }
 
     //The userMessage is then emitted back to the client via the 'message' event if no bad lang was found
-    io.emit('message', userMessage);
+    io.emit('message', generateMessage(userMessage));
     callback();
   });
 
@@ -47,14 +46,15 @@ io.on('connection', (socket) => {
 
   //Listens for share location button
   socket.on('sendLocation', (userCoordinates, callback) => {
-    socket.emit('locationMessage', 'https://www.google.com/maps/?=q=' + userCoordinates.latitude + ',' + userCoordinates.longitude);
+    //'https://www.google.com/maps/?=q=' + userCoordinates.latitude + ',' + userCoordinates.longitude
+    io.emit('locationMessage', generateLocationMessage('https://www.google.com/maps/?=q=' + userCoordinates.latitude + ',' + userCoordinates.longitude));
     //io.emit('message', 'https://www.google.com/maps/?=q=' + userCoordinates.latitude + ',' + userCoordinates.longitude);
     callback();
   });
 
   //Code that runs whenver a user disconnects i.e closing their browser
   socket.on('disconnect', () => {
-    io.emit('message', 'User has been disconnected');
+    io.emit('message', generateMessage('User has been disconnected'));
   });
 });
 

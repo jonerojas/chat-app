@@ -1,5 +1,6 @@
 //socket allows us to send an recieve events from the client
 const socket = io();
+//const { generateMessage } = require('../../src/utils/messages');
 
 //HTML Elements
 const messageForm = document.querySelector('#message-form');
@@ -14,21 +15,23 @@ const messageTemplate = document.querySelector('#message-template').innerHTML;
 const locationMessageTemplate = document.querySelector('#location-template').innerHTML;
 
 //Renders a users chat message to the console
-socket.on('message', (message) => {
-  console.log(message);
+socket.on('message', (messageObject) => {
+  console.log(messageObject);
 
   const html = Mustache.render(messageTemplate, {
-    text: message
+    text: messageObject.text,
+    createdAt: moment(messageObject.createdAt).format('dddd h:mma')
   });
   messages.insertAdjacentHTML('beforeend', html);
 });
 
 //Listens for location data from server
-socket.on('locationMessage', (url) => {
+socket.on('locationMessage', (urlObject) => {
   const html = Mustache.render(locationMessageTemplate, {
-    coordinates: url
+    coordinates: urlObject.url,
+    createdAt: moment(urlObject.createdAt).format('dddd h:mma')
   });
-  coords.insertAdjacentHTML('beforeend', html);
+  messages.insertAdjacentHTML('beforeend', html);
 });
 
 //Event listener for when a user submits their message
@@ -68,6 +71,7 @@ sendLocationButton.addEventListener('click', (e) => {
   sendLocationButton.setAttribute('disabled', 'disabled');
 
   navigator.geolocation.getCurrentPosition((position) => {
+    console.log(position);
     const userLocation = {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude
