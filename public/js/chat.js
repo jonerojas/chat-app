@@ -14,9 +14,16 @@ const coords = document.querySelector('#coords');
 const messageTemplate = document.querySelector('#message-template').innerHTML;
 const locationMessageTemplate = document.querySelector('#location-template').innerHTML;
 
+//Options
+
+//ignoreQuery removes the question mark from the query string. i.e ?username=Jonathan
+//Qs.parse returns an object { username: Jonathan }
+const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true });
+
 //Renders a users chat message to the console
 socket.on('message', (messageObject) => {
   console.log(messageObject);
+  console.log(room, username);
 
   const html = Mustache.render(messageTemplate, {
     text: messageObject.text,
@@ -86,5 +93,7 @@ sendLocationButton.addEventListener('click', (e) => {
     });
   });
 });
+
+socket.emit('join', { username, room });
 
 // const form = document.getElementById('userMessage');

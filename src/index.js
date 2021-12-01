@@ -22,10 +22,19 @@ app.use(express.static(publicDirectoryPath));
 io.on('connection', (socket) => {
   console.log('New WebSocket connection');
 
-  //emit is used to send the event to the client
-  socket.emit('message', generateMessage('Welcome'));
-  //broadcast is used to emit a message to all users EXCEPT the person sending the message
-  socket.broadcast.emit('message', generateMessage('A new user has joined!'));
+  //When a user joins with a username and a requested chat room
+  socket.on('join', ({ username, room }) => {
+    //.join allows us to emit events to a specific room
+    socket.join(room);
+
+    //emit is used to send the event to the client
+    socket.emit('message', generateMessage('Welcome'));
+    //broadcast is used to emit a message to all users EXCEPT the person sending the message
+    socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined.`));
+
+    //io.to.emit emits event to everyone in a specific room
+    //socket.broadcast.to.emit same as above EXCEPT person sending event in a specific room
+  });
 
   //io.emit sends to all users vs sokcet.io which is only visible to user that sent message
   //This sends the updated count back to ALL clients
@@ -37,7 +46,7 @@ io.on('connection', (socket) => {
     }
 
     //The userMessage is then emitted back to the client via the 'message' event if no bad lang was found
-    io.emit('message', generateMessage(userMessage));
+    io.to('testtown').emit('message', generateMessage(userMessage));
     callback();
   });
 
