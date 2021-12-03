@@ -26,6 +26,7 @@ socket.on('message', (messageObject) => {
   console.log(room, username);
 
   const html = Mustache.render(messageTemplate, {
+    username: messageObject.username,
     text: messageObject.text,
     createdAt: moment(messageObject.createdAt).format('dddd h:mma')
   });
@@ -35,6 +36,7 @@ socket.on('message', (messageObject) => {
 //Listens for location data from server
 socket.on('locationMessage', (urlObject) => {
   const html = Mustache.render(locationMessageTemplate, {
+    username: urlObject.username,
     coordinates: urlObject.url,
     createdAt: moment(urlObject.createdAt).format('dddd h:mma')
   });
@@ -94,6 +96,11 @@ sendLocationButton.addEventListener('click', (e) => {
   });
 });
 
-socket.emit('join', { username, room });
+socket.emit('join', { username, room }, (error) => {
+  if (error) {
+    alert(error);
+    location.href = '/';
+  }
+});
 
 // const form = document.getElementById('userMessage');

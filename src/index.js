@@ -4,6 +4,7 @@ const path = require('path');
 const socketio = require('socket.io');
 const Filter = require('bad-words');
 const { generateMessage, generateLocationMessage } = require('./utils/messages');
+const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users');
 
 const app = express();
 const server = http.createServer(app);
@@ -20,18 +21,26 @@ app.use(express.static(publicDirectoryPath));
 //'connection' will fire when a connection is made
 //io.on is only used to listen for new connections
 io.on('connection', (socket) => {
+  //We can use socket.id in all children functions to look up users with the util functions
   console.log('New WebSocket connection');
 
   //When a user joins with a username and a requested chat room
-  socket.on('join', ({ username, room }) => {
+  socket.on('join', ({ username, room }, callback) => {
+    //Well get the error prop is things went wrong
+    const { user, error } = addUser({ id: socket.id, username, room });
+
+    if (error) {
+      return callback(error);
+    }
     //.join allows us to emit events to a specific room
-    socket.join(room);
+    socket.join(user.room);
 
     //emit is used to send the event to the client
-    socket.emit('message', generateMessage('Welcome'));
+    socket.emit('message', generateMessage('Admin', 'Welcome'));
     //broadcast is used to emit a message to all users EXCEPT the person sending the message
-    socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined.`));
+    socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined.`));
 
+    callback();
     //io.to.emit emits event to everyone in a specific room
     //socket.broadcast.to.emit same as above EXCEPT person sending event in a specific room
   });
@@ -45,8 +54,11 @@ io.on('connection', (socket) => {
       return callback('Be kind, please dont swear.');
     }
 
+    //getUser will return a object
+    const user = getUser(socket.id);
+
     //The userMessage is then emitted back to the client via the 'message' event if no bad lang was found
-    io.to('testtown').emit('message', generateMessage(userMessage));
+    io.to(user.room).emit('message', generateMessage(user.username, userMessage));
     callback();
   });
 
@@ -55,15 +67,24 @@ io.on('connection', (socket) => {
 
   //Listens for share location button
   socket.on('sendLocation', (userCoordinates, callback) => {
+    const user = getUser(socket.id);
+
     //'https://www.google.com/maps/?=q=' + userCoordinates.latitude + ',' + userCoordinates.longitude
-    io.emit('locationMessage', generateLocationMessage('https://www.google.com/maps/?=q=' + userCoordinates.latitude + ',' + userCoordinates.longitude));
+    io.to(user.room).emit(
+      'locationMessage',
+      generateLocationMessage(user.username, 'https://www.google.com/maps/?=q=' + userCoordinates.latitude + ',' + userCoordinates.longitude)
+    );
     //io.emit('message', 'https://www.google.com/maps/?=q=' + userCoordinates.latitude + ',' + userCoordinates.longitude);
     callback();
   });
 
   //Code that runs whenver a user disconnects i.e closing their browser
   socket.on('disconnect', () => {
-    io.emit('message', generateMessage('User has been disconnected'));
+    const user = removeUser(socket.id);
+
+    if (user) {
+      io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left ${user.room}`));
+    }
   });
 });
 

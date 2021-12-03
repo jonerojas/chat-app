@@ -13,7 +13,7 @@
 
         <div class="compose">
           <form id="message-form">
-            <input name="userMessage" placeholder="Text here" type="text" value="" />
+            <input name="userMessage" placeholder="Text here" required autocomplete="off" />
             <button>Send</button>
           </form>
           <button id="send-location">Share Location</button>
@@ -25,7 +25,7 @@
     <script id="message-template" type="text/html">
       <div class="message">
         <p>
-          <span class="message__name">Random Generated Name</span>
+          <span class="message__name">{{username}}</span>
           <span class="message__meta">{{createdAt}}</span>
         </p>
         <p>{{text}}</p>
@@ -35,7 +35,7 @@
     <script id="location-template" type="text/html">
       <div class="message">
         <p>
-          <span class="message__name">Random Generated Name</span>
+          <span class="message__name">{{username}}</span>
           <span class="message__meta">{{createdAt}}</span>
         </p>
         <p>
