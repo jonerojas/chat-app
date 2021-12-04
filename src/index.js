@@ -40,6 +40,12 @@ io.on('connection', (socket) => {
     //broadcast is used to emit a message to all users EXCEPT the person sending the message
     socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined.`));
 
+    //Sending list of users in room to client
+    io.to(user.room).emit('roomData', {
+      room: user.room,
+      users: getUsersInRoom(user.room)
+    });
+
     callback();
     //io.to.emit emits event to everyone in a specific room
     //socket.broadcast.to.emit same as above EXCEPT person sending event in a specific room
@@ -84,6 +90,11 @@ io.on('connection', (socket) => {
 
     if (user) {
       io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left ${user.room}`));
+      //Sending list of users in room to client
+      io.to(user.room).emit('roomData', {
+        room: user.room,
+        users: getUsersInRoom(user.room)
+      });
     }
   });
 });

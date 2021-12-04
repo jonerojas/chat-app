@@ -13,12 +13,38 @@ const coords = document.querySelector('#coords');
 //Templates
 const messageTemplate = document.querySelector('#message-template').innerHTML;
 const locationMessageTemplate = document.querySelector('#location-template').innerHTML;
+const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML;
 
 //Options
 
 //ignoreQuery removes the question mark from the query string. i.e ?username=Jonathan
 //Qs.parse returns an object { username: Jonathan }
 const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true });
+
+//Autoscroll
+const autoScroll = () => {
+  //New message element
+  const $newMessage = messages.lastElementChild;
+
+  //Height of new message element
+  const newMessageStyles = getComputedStyle($newMessage);
+  const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+  const newMessageHeight = $newMessage.offsetHeight + newMessageMargin;
+
+  //Visible Height
+  const visibleHeight = messages.offsetHeight;
+
+  //Height of message container
+  const containerHeight = messages.scrollHeight;
+
+  //How far has the user scrollled?
+  const scrollOffset = messages.scrollTop + visibleHeight;
+
+  if (containerHeight - newMessageHeight <= scrollOffset) {
+    //This line is basically always scroll to the bottom
+    messages.scrollTop = messages.scrollHeight;
+  }
+};
 
 //Renders a users chat message to the console
 socket.on('message', (messageObject) => {
@@ -31,9 +57,10 @@ socket.on('message', (messageObject) => {
     createdAt: moment(messageObject.createdAt).format('dddd h:mma')
   });
   messages.insertAdjacentHTML('beforeend', html);
+  autoScroll();
 });
 
-//Listens for location data from server
+//Listens for location data from server then renders it to the chat
 socket.on('locationMessage', (urlObject) => {
   const html = Mustache.render(locationMessageTemplate, {
     username: urlObject.username,
@@ -41,6 +68,16 @@ socket.on('locationMessage', (urlObject) => {
     createdAt: moment(urlObject.createdAt).format('dddd h:mma')
   });
   messages.insertAdjacentHTML('beforeend', html);
+  autoScroll();
+});
+
+//Loads users to display in room
+socket.on('roomData', ({ room, users }) => {
+  const html = Mustache.render(sidebarTemplate, {
+    room: room,
+    users: users
+  });
+  document.querySelector('#sidebar').innerHTML = html;
 });
 
 //Event listener for when a user submits their message
@@ -102,5 +139,3 @@ socket.emit('join', { username, room }, (error) => {
     location.href = '/';
   }
 });
-
-// const form = document.getElementById('userMessage');

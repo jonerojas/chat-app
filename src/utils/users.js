@@ -55,7 +55,7 @@ const getUser = (id) => {
 const getUsersInRoom = (room) => {
   room = room.trim().toLowerCase();
   const usersInRoom = users.filter((user) => user.room === room);
-  return usersInRoom.length > 1 ? usersInRoom : 'No users in ' + room;
+  return usersInRoom.length > 0 ? usersInRoom : 'No users in ' + room;
 };
 
 module.exports = {
